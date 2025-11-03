@@ -60,6 +60,14 @@ func (e *ErrAllocatorFull) Error() string {
 	return "allocator full"
 }
 
+// ErrWaitProviderAllocate ...
+type ErrWaitProviderAllocate struct{}
+
+// Error returns the human-readable error for the ErrWaitProviderAllocate
+func (e *ErrWaitProviderAllocate) Error() string {
+	return "waiting for provider to allocate CIDR"
+}
+
 // ErrCIDRAllocated is an error that should be used when the requested CIDR
 // is already allocated.
 type ErrCIDRAllocated struct {
@@ -439,26 +447,28 @@ func (n *NodesPodCIDRManager) allocateNode(node *v2.CiliumNode) (cn *v2.CiliumNo
 	}()
 
 	if len(node.Spec.IPAM.PodCIDRs) == 0 {
-		// If we can't allocate podCIDRs for now we should store the node
-		// temporarily until n.reSync is called.
-		if !n.canAllocatePodCIDRs {
-			log.Debug("Postponing CIDR allocation")
-			n.nodesToAllocate[node.GetName()] = node
-			return nil, false, false, nil
-		}
+		return nil, false, true, &ErrWaitProviderAllocate{}
 
-		// Allocate the next free CIDRs
-		cidrs, allocated, err = n.allocateNext(node.GetName())
-		if err != nil {
-			// We want to log this error in cilium node
-			updateStatus = true
-			return
-		}
+		// // If we can't allocate podCIDRs for now we should store the node
+		// // temporarily until n.reSync is called.
+		// if !n.canAllocatePodCIDRs {
+		// 	log.Debug("Postponing CIDR allocation")
+		// 	n.nodesToAllocate[node.GetName()] = node
+		// 	return nil, false, false, nil
+		// }
 
-		log.WithFields(logrus.Fields{
-			"cidrs":     cidrs.String(),
-			"allocated": allocated,
-		}).Debug("Allocated new CIDRs")
+		// // Allocate the next free CIDRs
+		// cidrs, allocated, err = n.allocateNext(node.GetName())
+		// if err != nil {
+		// 	// We want to log this error in cilium node
+		// 	updateStatus = true
+		// 	return
+		// }
+
+		// log.WithFields(logrus.Fields{
+		// 	"cidrs":     cidrs.String(),
+		// 	"allocated": allocated,
+		// }).Debug("Allocated new CIDRs")
 	} else {
 		cidrs, err = parsePodCIDRs(node.Spec.IPAM.PodCIDRs)
 		if err != nil {

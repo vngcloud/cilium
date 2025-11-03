@@ -535,3 +535,16 @@ renovate-local: ## Run a local linter for the renovate configuration
 		-v $(ROOT_DIR):/usr/src/app \
 		docker.io/renovate/renovate:slim \
 			renovate --platform=local
+
+.PHONY: annd2
+annd2:
+	make docker-operator-generic-image
+	make docker-operator-image
+	docker tag vcr.vngcloud.vn/60108-annd2-ingress/cilium/operator-generic:latest vcr.vngcloud.vn/81-vks-public/cilium/operator-generic:v1.17.9-vngcloud
+	docker tag vcr.vngcloud.vn/60108-annd2-ingress/cilium/operator:latest         vcr.vngcloud.vn/81-vks-public/cilium/operator:v1.17.9-vngcloud
+	docker push vcr.vngcloud.vn/81-vks-public/cilium/operator-generic:v1.17.9-vngcloud
+	docker push vcr.vngcloud.vn/81-vks-public/cilium/operator:v1.17.9-vngcloud
+
+.PHONY: logs
+logs:
+	kubectl logs $$(kubectl get pods -n kube-system -o go-template --template '{{range .items}}{{.metadata.name}}{{"\n"}}{{end}}' | grep cilium-operator) -n kube-system -f
