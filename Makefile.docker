@@ -65,7 +65,7 @@ GIT_IGNORE_FILES := $(shell find . -not -path "./vendor*" -name .gitignore -prin
 			-e '$$a\' \
 		{DIR}.gitignore >> $@
 
-DOCKER_REGISTRY ?= quay.io
+DOCKER_REGISTRY ?= vcr.vngcloud.vn/60108-annd2-ingress
 ifeq ($(findstring /,$(DOCKER_DEV_ACCOUNT)),/)
     # DOCKER_DEV_ACCOUNT already contains '/', assume it specifies a registry
     IMAGE_REPOSITORY := $(DOCKER_DEV_ACCOUNT)
